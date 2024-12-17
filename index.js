@@ -22,7 +22,7 @@ const corsOptions = {
       callback(new Error("Not allowed by CORS"));
     }
   },
-  
+
 };
 
 
@@ -35,20 +35,22 @@ const adminRoutes = require("./routes/admin");
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
 
+const { requireAuth, requireAdminAuth } = require("./middleware/requireAuth");
 
-app.use("/api/admin",adminRoutes)
-app.use("/api/auth",authRoutes)
-app.use("/api/user", userRoutes);
+
+app.use("/api/auth", authRoutes)
+app.use("/api/admin", requireAdminAuth, adminRoutes)
+app.use("/api/user", requireAuth, userRoutes);
 
 
 
 mongoose
-    .connect(process.env.MONGO_URI)
-    .then(() => {
-        app.listen(process.env.PORT, () => {
-            console.log(`Listening on Port: ${process.env.PORT} - DB Connected`);
-        });
-    })
-    .catch((error) => {
-        console.log(error);
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    app.listen(process.env.PORT, () => {
+      console.log(`Listening on Port: ${process.env.PORT} - DB Connected`);
     });
+  })
+  .catch((error) => {
+    console.log(error);
+  });

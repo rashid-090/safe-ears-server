@@ -104,6 +104,8 @@ const forgotPassword = async (req, res) => {
 const validateForgotOTP = async (req, res) => {
   try {
     const { email, otp } = req.body;
+    console.log(req.body);
+    
 
     if (!email || !otp) {
       throw Error("All fields are required");
