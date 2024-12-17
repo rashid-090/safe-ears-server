@@ -37,6 +37,7 @@ const userRoutes = require("./routes/user");
 
 const { requireAuth, requireAdminAuth } = require("./middleware/requireAuth");
 
+app.get("/api/test", (req, res) => { res.status(200).json({ data: "test route success" }) });
 
 app.use("/api/auth", authRoutes)
 app.use("/api/admin", requireAdminAuth, adminRoutes)
