@@ -41,7 +41,7 @@ app.get("/api/test", (req, res) => { res.status(200).json({ data: "test route su
 
 app.use("/api/auth", authRoutes)
 app.use("/api/admin", requireAdminAuth, adminRoutes)
-app.use("/api/user", requireAuth, userRoutes);
+app.use("/api/user", userRoutes);
 
 
 
