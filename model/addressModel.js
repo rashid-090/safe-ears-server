@@ -47,7 +47,8 @@ const AddressSchema = new Schema({
     ref: User,
     required: true,
   },
-});
+}, { timestamps: true }
+);
 
 const Address = mongoose.model("Address", AddressSchema);
 

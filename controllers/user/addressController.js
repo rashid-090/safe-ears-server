@@ -12,7 +12,7 @@ const getAddresses = async (req, res) => {
       throw Error("Invalid user Id!!!");
     }
 
-    const addresses = await Address.find({ user: _id });
+    const addresses = await Address.find({ user: _id }).sort({ createdAt: -1 }).exec();;
 
     if (!addresses) {
       throw Error("No address found");

@@ -1,7 +1,7 @@
 // utils/mailSender.js
 const nodemailer = require("nodemailer");
 
-const mailSender = async (email, title, body) => {
+const mailSender = async (email, title, body, attachment) => {
   try {
     // Create a Transporter to send emails
     let transporter = nodemailer.createTransport({
@@ -11,8 +11,8 @@ const mailSender = async (email, title, body) => {
         pass: process.env.MAIL_PASS,
       },
     });
-    
-    
+
+
 
     // Send emails to users
     let info = await transporter.sendMail({
@@ -20,9 +20,10 @@ const mailSender = async (email, title, body) => {
       to: email,
       subject: title,
       html: body,
+      attachments: attachment
     });
 
-    
+
 
     return info;
   } catch (error) {

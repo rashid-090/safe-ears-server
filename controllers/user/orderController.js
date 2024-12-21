@@ -10,6 +10,7 @@ const Wallet = require("../../model/walletModel");
 // const { generateInvoicePDF } = require("../Common/invoicePDFGenFunctions");
 const Counter = require("../../model/counterModel");
 const { generateInvoicePDF } = require("../Common/invoicePDFGenFunctions");
+const { sendOrderDetailsMail } = require("../../util/mailFunction");
 
 // Just the function increment or decrement product count
 const updateProductList = async (id, count) => {
@@ -104,13 +105,31 @@ const createOrder = async (req, res) => {
       ],
 
     };
-    console.log("order data", orderData);
 
 
 
 
 
     const order = await Order.create(orderData);
+    // console.log(order);
+
+
+    if (order) {
+
+
+      try {
+        const order2 = await Order.findOne(order._id).populate("products.productId user");
+
+
+        const pdfBuffer = await generateInvoicePDF(order2);
+
+        console.log(order2);
+        sendOrderDetailsMail(order2.user.email, order2, pdfBuffer)
+      } catch (err) {
+        console.log("Error while senting invoice", err);
+
+      }
+    }
 
     if (order) {
       await Cart.findByIdAndDelete(cart._id);
@@ -161,7 +180,7 @@ const getOrders = async (req, res) => {
 
     const totalAvailableOrders = await Order.countDocuments({ user: _id });
     console.log(totalAvailableOrders);
-    
+
 
     res.status(200).json({ orders, totalAvailableOrders });
   } catch (error) {
@@ -197,161 +216,7 @@ const getOrder = async (req, res) => {
   }
 };
 
-// Cancelling order
-// const cancelOrder = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { reason } = req.body;
 
-//     let find = {};
-
-//     if (mongoose.Types.ObjectId.isValid(id)) {
-//       find._id = id;
-//     } else {
-//       find.orderId = id;
-//     }
-
-//     const orderDetails = await Order.findOne(find).populate(
-//       "products.productId"
-//     );
-
-//     const products = orderDetails.products.map((item) => ({
-//       productId: item.productId._id,
-//       quantity: item.quantity,
-//     }));
-
-//     const updateProductPromises = products.map((item) => {
-//       return updateProductList(item.productId, item.quantity);
-//     });
-
-//     await Promise.all(updateProductPromises);
-
-//     const order = await Order.findOneAndUpdate(
-//       find,
-//       {
-//         $set: {
-//           status: "cancelled",
-//         },
-//         $push: {
-//           statusHistory: {
-//             status: "cancelled",
-//             date: Date.now(),
-//             reason: reason,
-//           },
-//         },
-//       },
-//       { new: true }
-//     );
-
-//     if (order.paymentMode !== "cashOnDelivery") {
-//       const token = req.cookies.user_token;
-
-//       const { _id } = jwt.verify(token, process.env.SECRET);
-
-//       if (!mongoose.Types.ObjectId.isValid(_id)) {
-//         throw Error("Invalid ID!!!");
-//       }
-//       // Adding the refund to wallet of user.
-
-//       await Payment.findOneAndUpdate(
-//         { order: order._id },
-//         {
-//           $set: {
-//             status: "refunded",
-//           },
-//         }
-//       );
-
-//       let counter = await Counter.findOne({
-//         model: "Wallet",
-//         field: "transaction_id",
-//       });
-
-//       // Checking if order counter already exist
-//       if (counter) {
-//         counter.count += 1;
-//         await counter.save();
-//       } else {
-//         counter = await Counter.create({
-//           model: "Wallet",
-//           field: "transaction_id",
-//         });
-//       }
-
-//       let wallet = {};
-//       const exists = await Wallet.findOne({ user: _id });
-//       if (exists) {
-//         wallet = await Wallet.findByIdAndUpdate(exists._id, {
-//           $inc: {
-//             balance: order.totalPrice,
-//           },
-//           $push: {
-//             transactions: {
-//               transaction_id: counter.count + 1,
-//               amount: order.totalPrice,
-//               type: "credit",
-//               description: "Order Cancellation Refund",
-//               order: order._id,
-//             },
-//           },
-//         });
-//       } else {
-//         wallet = await Wallet.create({
-//           user: _id,
-//           balance: order.totalPrice,
-//           transactions: [
-//             {
-//               transaction_id: counter.count + 1,
-//               amount: order.totalPrice,
-//               type: "credit",
-//               description: "Order Cancellation Refund",
-//               order: order._id,
-//             },
-//           ],
-//         });
-//       }
-//     }
-
-//     res.status(200).json({ order });
-//   } catch (error) {
-//     res.status(400).json({ error: error.message });
-//   }
-// };
-
-// Requesting for returning an order
-// const requestReturn = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { reason } = req.body;
-//     let find = {};
-
-//     if (mongoose.Types.ObjectId.isValid(id)) {
-//       find._id = id;
-//     } else {
-//       find.orderId = id;
-//     }
-
-//     const order = await Order.findOneAndUpdate(
-//       find,
-//       {
-//         $set: {
-//           status: "return request",
-//         },
-//         $push: {
-//           statusHistory: {
-//             status: "return request",
-//             date: Date.now(),
-//             reason: reason,
-//           },
-//         },
-//       },
-//       { new: true }
-//     );
-//     res.status(200).json({ order });
-//   } catch (error) {
-//     res.status(400).json({ error: error.message });
-//   }
-// };
 
 // Generating pdf invoices
 const generateOrderInvoice = async (req, res) => {
@@ -367,7 +232,7 @@ const generateOrderInvoice = async (req, res) => {
     }
 
     const order = await Order.findOne(find).populate("products.productId");
-    
+
 
     const pdfBuffer = await generateInvoicePDF(order);
 
