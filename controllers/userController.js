@@ -7,10 +7,10 @@ const createToken = (_id) => {
 };
 
 const cookieConfig = {
-  sameSite: "none", // in order to response to both first-party and cross-site requests
-  secure: "auto", // it should set automatically to secure if is https.
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", 
+  secure: process.env.NODE_ENV === "production", 
   httpOnly: true,
-  maxAge: 1000 * 60 * 60 * 24,
+  maxAge: 1000 * 60 * 60 * 24, // 1 day
 };
 
 // To get user data on initial page load.
