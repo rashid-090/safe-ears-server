@@ -9,7 +9,9 @@ const getProducts = async (req, res) => {
 
 
 
-        const products = await Product.find()
+        const products = await Product.find().sort({
+            "createdAt": -1
+        })
 
         const totalAvailableProducts = await Product.countDocuments();
 
@@ -47,7 +49,7 @@ const addProduct = async (req, res) => {
         let formData = { ...req.body, isActive: true };
         const files = req?.files;
         console.log(formData);
-        
+
 
         // return res.status(200).json(typeof formData.attributes)
 
@@ -121,7 +123,7 @@ const updateProduct = async (req, res) => {
             formData.moreImageURL = [];
         }
 
-        
+
 
         const product = await Product.findOneAndUpdate(
             { _id: id },
